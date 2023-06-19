@@ -1,3 +1,6 @@
+import ctypes
+
+
 # return 1/d
 def get_fractional(d: int) -> int:
 	s = bin(d)[2:]
@@ -12,8 +15,6 @@ def get_fractional(d: int) -> int:
 
 	for i in range(63):
 		m = bin(d * int(res, 2))[2:]
-
-		#print("{:>64} {:>64}".format(res, m))
 
 		fst = len(m)-len(res)-fp
 
@@ -46,14 +47,73 @@ class Number:
 
 			self.number = f_div * f_mul + int(bin(i_num)[2:] + "0" * self.float_point, 2)
 
+			self.normalize()
+
+
+	def normalize(self):
+		s = bin(self.number)[2:]
+		sf = 0
+
+		for i in range(self.float_point):
+			if s[-1] == '0':
+				sf += 1
+				s = s[:-1]
+
+		self.number = int(s, 2)
+		self.float_point -= sf
+
+		self.number = ctypes.c_uint64(~self.number).value
+		self.number = ctypes.c_uint64(~self.number).value
+
+
+	def __add__(self, other):
+		n1 = int(bin(self.number)[2:] + "0" * other.float_point, 2)
+		n2 = int(bin(other.number)[2:] + "0" * self.float_point, 2)
+
+		r = n1 + n2
+		fst = self.float_point + other.float_point
+
+		rn = Number()
+		rn.number = r
+		rn.float_point = fst
+
+		rn.normalize()
+
+		return rn
+
+
+	def __sub__(self, other):
+		self.number = ctypes.c_uint64(~self.number).value
+		res = self + other
+		res.number = ctypes.c_uint64(~res.number).value
+		res.normalize()
+		self.number = ctypes.c_uint64(~self.number).value
+		return res
+
+
+	def __mul__(self, other):
+		r = self.number * other.number
+		fst = self.float_point + other.float_point
+
+		rn = Number()
+		rn.number = r
+		rn.float_point = fst
+
+		rn.normalize()
+
+		return rn
+
 
 	def __str__(self):
-		s = bin(self.number)[2:]
+		s = bin(self.number)[2:].zfill(64)
 		s = s[::-1]
-		s = s[:self.float_point] + ',' + s[self.float_point:]
+		s = s[:self.float_point] + '.' + s[self.float_point:]
 		s = s[::-1]
 		return s
 
 
-a = Number("1.5")
-print(a)
+a = Number("0.25")
+b = Number("10")
+c = a * b
+
+print(a,b,c)
