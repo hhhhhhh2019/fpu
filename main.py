@@ -51,16 +51,20 @@ class Number:
 
 
 	def normalize(self):
-		s = bin(self.number)[2:]
-		sf = 0
+		if self.float_point < 0:
+			self.number = int(bin(self.number)[2:] + "0" * (-self.float_point), 2)
+			self.float_point = 0
+		else:
+			s = bin(self.number)[2:]
+			sf = 0
 
-		for i in range(self.float_point):
-			if s[-1] == '0':
-				sf += 1
-				s = s[:-1]
+			for i in range(self.float_point):
+				if s[-1] == '0':
+					sf += 1
+					s = s[:-1]
 
-		self.number = int(s, 2)
-		self.float_point -= sf
+			self.number = int(s, 2)
+			self.float_point -= sf
 
 		self.number = ctypes.c_uint64(~self.number).value
 		self.number = ctypes.c_uint64(~self.number).value
@@ -103,6 +107,28 @@ class Number:
 
 		return rn
 
+	def __truediv__(self, other):
+		#r = int(self.number / other.number)
+		#fst = self.float_point + other.float_point
+
+		#rn = Number()
+		#rn.number = r
+		#rn.float_point = fst
+
+		#rn.normalize()
+
+		#return rn
+
+		n = Number()
+		n.number, n.float_point = get_fractional(other.number)
+		n.normalize()
+
+		res = self * n
+		res.float_point -= other.float_point
+		res.normalize()
+
+		return res
+
 
 	def __str__(self):
 		s = bin(self.number)[2:].zfill(64)
@@ -112,8 +138,8 @@ class Number:
 		return s
 
 
-a = Number("0.25")
-b = Number("10")
-c = a * b
+a = Number("0.6")
+b = Number("0.3")
+c = a / b
 
 print(a,b,c)
