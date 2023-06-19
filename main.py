@@ -46,8 +46,30 @@ class Number:
 			f_div,self.float_point = get_fractional(10 ** len(snums[1]))
 
 			self.number = f_div * f_mul + int(bin(i_num)[2:] + "0" * self.float_point, 2)
+		elif type(val) == int:
+			self.number = val
+		elif type(val) == float:
+			snums = str(val).split('.') + [""]
+			nums = [0,0]
 
-			self.normalize()
+			if len(snums[0]) > 0:
+				nums[0] = int(snums[0])
+
+			if len(snums[1]) > 0:
+				nums[1] = int(snums[1])
+
+			f_div = 0
+			f_mul = nums[1]
+			i_num = nums[0]
+
+			f_div,self.float_point = get_fractional(10 ** len(snums[1]))
+
+			self.number = f_div * f_mul + int(bin(i_num)[2:] + "0" * self.float_point, 2)
+		elif type(val) == tuple:
+			self.number,self.float_point = get_fractional(val[1])
+			self.number = val[0] * int(bin(self.number)[2:] + "0" * self.float_point, 2)
+
+		self.normalize()
 
 
 	def normalize(self):
@@ -62,6 +84,9 @@ class Number:
 				if s[-1] == '0':
 					sf += 1
 					s = s[:-1]
+
+			if len(s) == 0:
+				s = '0'
 
 			self.number = int(s, 2)
 			self.float_point -= sf
@@ -108,17 +133,6 @@ class Number:
 		return rn
 
 	def __truediv__(self, other):
-		#r = int(self.number / other.number)
-		#fst = self.float_point + other.float_point
-
-		#rn = Number()
-		#rn.number = r
-		#rn.float_point = fst
-
-		#rn.normalize()
-
-		#return rn
-
 		n = Number()
 		n.number, n.float_point = get_fractional(other.number)
 		n.normalize()
@@ -138,8 +152,8 @@ class Number:
 		return s
 
 
-a = Number("0.6")
-b = Number("0.3")
-c = a / b
+a = Number((4,3))
+b = Number((1,3)) + Number(1)
 
-print(a,b,c)
+print(a)
+print(b)
