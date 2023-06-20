@@ -204,12 +204,5 @@ class Number:
 		print("-"*50)
 
 
-#i = 1
-
-#for i in range(9007199254740991,0,-1):
-#	a = Number((1,i))
-#	if (a*Number(i)).number != 1:
-#		print(i)
-
 a = Number((123412232138121,9007199254740991))
 print(a*Number(9007199254740991))
