@@ -13,7 +13,7 @@ def get_fractional(d: int) -> int:
 
 	res = "1"
 
-	for i in range(63):
+	for i in range(64-11):
 		m = bin(d * int(res, 2))[2:]
 
 		fst = len(m)-len(res)-fp
@@ -21,6 +21,19 @@ def get_fractional(d: int) -> int:
 		res = m[fst-1] + res
 
 	return (int(res,2), fp)
+
+
+def f(s, p):
+	count = 0
+
+	while len(s) >= len(p):
+		if s[0:len(p)] != p:
+			break
+
+		s = s[len(p):]
+		count += 1
+
+	return count
 
 
 
@@ -67,7 +80,7 @@ class Number:
 			self.number = f_div * f_mul + int(bin(i_num)[2:] + "0" * self.float_point, 2)
 		elif type(val) == tuple:
 			self.number,self.float_point = get_fractional(val[1])
-			self.number = val[0] * int(bin(self.number)[2:] + "0" * self.float_point, 2)
+			self.number = val[0] * int(bin(self.number)[2:], 2)
 
 		self.normalize()
 
@@ -81,6 +94,9 @@ class Number:
 			sf = 0
 
 			for i in range(self.float_point):
+				if len(s) == 0:
+					break
+
 				if s[-1] == '0':
 					sf += 1
 					s = s[:-1]
@@ -91,6 +107,8 @@ class Number:
 			self.number = int(s, 2)
 			self.float_point -= sf
 
+		self.number &= (1<<(64-11))-1
+		self.float_point &= (2<<11)-1
 		self.number = ctypes.c_uint64(~self.number).value
 		self.number = ctypes.c_uint64(~self.number).value
 
@@ -132,6 +150,7 @@ class Number:
 
 		return rn
 
+
 	def __truediv__(self, other):
 		n = Number()
 		n.number, n.float_point = get_fractional(other.number)
@@ -144,16 +163,53 @@ class Number:
 		return res
 
 
+	def __neg__(self):
+		return Number(0) - self
+
+
 	def __str__(self):
-		s = bin(self.number)[2:].zfill(64)
-		s = s[::-1]
-		s = s[:self.float_point] + '.' + s[self.float_point:]
-		s = s[::-1]
-		return s
+		period = "0"
+		number = 0
+
+		s = bin(self.number)[2:].zfill(64-11)
+		d = {}
+
+		#return bin(self.float_point)[2:] + s
+
+		for i in range(1,len(s)):
+			d[s[0:i]] = f(s, s[0:i])
+
+		if len(d) != 0:
+			mk = max(d, key=d.get)
+			mv = d[mk]
+
+			period = "{} / {}".format(int(mk, 2), (1<<len(mk))-1)
+
+			if len(mk)*mv < len(s):
+				number = int(s[len(mk)*mv:], 2)
+
+			period += " * " + str(1<<len(s[len(mk)*mv:]))
+		else:
+			number = int(s, 2)
+
+		float = "1/" + str(1<<self.float_point)
+		s = "({} - {}) * {}".format(number, period, float)
+		return s + " ~= " + str(eval(s))
 
 
-a = Number((4,3))
-b = Number((1,3)) + Number(1)
+	def debug(self):
+		print("-"*50)
+		print(bin(self.number)[2:].zfill(64-11))
+		print(self.float_point)
+		print("-"*50)
 
-print(a)
-print(b)
+
+#i = 1
+
+#for i in range(9007199254740991,0,-1):
+#	a = Number((1,i))
+#	if (a*Number(i)).number != 1:
+#		print(i)
+
+a = Number((123412232138121,9007199254740991))
+print(a*Number(9007199254740991))
